@@ -1,4 +1,5 @@
 {CompositeDisposable} = require 'atom'
+{memoize} = require 'memoizee'
 
 module.exports =
 class SnippetExpansion
@@ -13,14 +14,27 @@ class SnippetExpansion
 
     @editor.transact =>
       newRange = @editor.transact =>
-        @cursor.selection.insertText(@snippet.body, autoIndent: false)
-      if @snippet.tabStops.length > 0
-        @subscriptions.add @cursor.onDidChangePosition (event) => @cursorMoved(event)
-        @subscriptions.add @cursor.onDidDestroy => @cursorDestroyed()
-        @placeTabStopMarkers(startPosition, @snippet.tabStops)
-        @snippets.addExpansion(@editor, this)
-        @editor.normalizeTabsInBufferRange(newRange)
-      @indentSubsequentLines(startPosition.row, @snippet) if @snippet.lineCount > 1
+          @setChar = (i) =>
+             if  i < @snippet.body.length
+                if  @snippet.body[i] != ' '
+                    audio = new Audio(__dirname+'/../audio/key_press.mp3')
+                    #audio.volume = 0.5;
+                    #audio.play();
+                @cursor.selection.insertText(@snippet.body[i], autoIndent: false)
+                tmO = 100
+                if i < @snippet.body.length-2 && @snippet.body[i+1] == ' '
+                    tmO = 0
+                setTimeout () =>
+                    @setChar(i+1)
+                ,tmO
+             else
+              if @snippet.tabStops.length > 0
+                  @subscriptions.add @cursor.onDidChangePosition (event) => @cursorMoved(event)
+                  @subscriptions.add @cursor.onDidDestroy => @cursorDestroyed()
+                  @placeTabStopMarkers(startPosition, @snippet.tabStops)
+                  @snippets.addExpansion(@editor, this)
+              @indentSubsequentLines(startPosition.row, @snippet) if @snippet.lineCount > 1
+          @setChar(0)
 
   cursorMoved: ({oldBufferPosition, newBufferPosition, textChanged}) ->
     return if @settingTabStop or textChanged
