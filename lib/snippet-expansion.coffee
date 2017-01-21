@@ -12,16 +12,19 @@ class SnippetExpansion
 
     startPosition = @cursor.selection.getBufferRange().start
 
+    if startPosition.column > 0
+        startPadding = Array(startPosition.column+1).join(' ')
+        @snippet.body = @snippet.body.replace(/\n/g, '\n'+ startPadding)
+
     @editor.transact =>
       newRange = @editor.transact =>
           @setChar = (i) =>
              if  i < @snippet.body.length
-                if  @snippet.body[i] != ' '
-                    audio = new Audio(__dirname+'/../audio/key_press.mp3')
-                    #audio.volume = 0.5;
-                    #audio.play();
-                @cursor.selection.insertText(@snippet.body[i], autoIndent: false)
-                tmO = 100
+
+                @cursor.selection.insertText(@snippet.body[i],  autoIndent: false)
+
+                tmO = 35
+
                 if i < @snippet.body.length-2 && @snippet.body[i+1] == ' '
                     tmO = 0
                 setTimeout () =>
@@ -33,7 +36,7 @@ class SnippetExpansion
                   @subscriptions.add @cursor.onDidDestroy => @cursorDestroyed()
                   @placeTabStopMarkers(startPosition, @snippet.tabStops)
                   @snippets.addExpansion(@editor, this)
-              @indentSubsequentLines(startPosition.row, @snippet) if @snippet.lineCount > 1
+#              @indentSubsequentLines(startPosition.row, @snippet) if @snippet.lineCount > 1
           @setChar(0)
 
   cursorMoved: ({oldBufferPosition, newBufferPosition, textChanged}) ->
