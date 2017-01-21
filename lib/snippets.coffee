@@ -211,20 +211,26 @@ module.exports =
       @scopedPropertyStore.removePropertiesForSourceAndSelector(path, scopeSelector)
 
   parsedSnippetsForScopes: (scopeDescriptor) ->
+    activePath =  ""
+    editorFile = atom.workspace.getActivePaneItem().buffer.file
+    if editorFile
+      activePath = editorFile.path
+
+
     unparsedSnippetsByPrefix = @scopedPropertyStore.getPropertyValue(@getScopeChain(scopeDescriptor), "snippets")
     unparsedSnippetsByPrefix ?= {}
     snippets = {}
     for prefix, attributes of unparsedSnippetsByPrefix
       continue if typeof attributes?.body isnt 'string'
 
-      {id, name, body, bodyTree, description, descriptionMoreURL, rightLabelHTML, leftLabel, leftLabelHTML} = attributes
+      {id, fn, name, body, bodyTree, description, descriptionMoreURL, rightLabelHTML, leftLabel, leftLabelHTML} = attributes
+      if !fn || _.endsWith(activePath, fn)
+        unless @parsedSnippetsById.has(id)
+          bodyTree ?= @getBodyParser().parse(body)
+          snippet = new Snippet({id, name, prefix, bodyTree, description, descriptionMoreURL, rightLabelHTML, leftLabel, leftLabelHTML, bodyText: body})
+          @parsedSnippetsById.set(id, snippet)
 
-      unless @parsedSnippetsById.has(id)
-        bodyTree ?= @getBodyParser().parse(body)
-        snippet = new Snippet({id, name, prefix, bodyTree, description, descriptionMoreURL, rightLabelHTML, leftLabel, leftLabelHTML, bodyText: body})
-        @parsedSnippetsById.set(id, snippet)
-
-      snippets[prefix] = @parsedSnippetsById.get(id)
+        snippets[prefix] = @parsedSnippetsById.get(id)
     snippets
 
   priorityForSource: (source) ->
