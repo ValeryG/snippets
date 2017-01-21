@@ -1,5 +1,4 @@
 {CompositeDisposable} = require 'atom'
-{memoize} = require 'memoizee'
 
 module.exports =
 class SnippetExpansion
@@ -21,9 +20,16 @@ class SnippetExpansion
           @setChar = (i) =>
              if  i < @snippet.body.length
 
+                #comment this if you do not want audio.
+                #if  @snippet.body[i] != ' '
+                #    console.log('playing audio');
+                #    audio = new Audio(__dirname+'/../audio/key_press.mp3')
+                #    audio.volume = 0.9;
+                #    audio.play();
+
                 @cursor.selection.insertText(@snippet.body[i],  autoIndent: false)
 
-                tmO = 35
+                tmO = 40
 
                 if i < @snippet.body.length-2 && @snippet.body[i+1] == ' '
                     tmO = 0
